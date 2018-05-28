@@ -665,6 +665,8 @@ usbHandleBulk(uint8_t *request, uint8_t *status)
     // Clear off "just did reset" flag each time a different cmd is run.
     cmdSeqInProgress &= ~XUM1541_DOING_RESET;
 
+    board_set_blinkcode(9);
+
     // Default is to return no data
     ret = XUM1541_IO_READY;
     cmd = request[0];
@@ -896,6 +898,8 @@ usbHandleBulk(uint8_t *request, uint8_t *status)
         DEBUGF(DBG_ERROR, "ERR: bulk cmd %d not impl.\n", cmd);
         ret = -1;
     }
+
+    board_set_blinkcode(8);
 
     return ret;
 }

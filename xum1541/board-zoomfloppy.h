@@ -244,5 +244,6 @@ uint8_t board_get_status(void);
 void board_set_status(uint8_t status);
 void board_update_display(void);
 bool board_timer_fired(void);
+void board_set_blinkcode(uint8_t code);
 
 #endif // _BOARD_ZOOMFLOPPY_H

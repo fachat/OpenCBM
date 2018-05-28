@@ -81,6 +81,20 @@ board_get_status()
     return statusValue;
 }
 
+static uint8_t blinkcode = 4;
+static uint8_t blinkcnt = 0;
+static uint8_t blinkspeed = 2;
+static uint8_t blinktic = 0;
+
+void 
+board_set_blinkspeed(uint8_t code) {
+    if (code != blinkspeed) {
+    	PORTC &= ~LED_MASK;
+    	blinkspeed = code;
+        blinktic = code;
+    }
+}
+
 // Status indicators (LEDs for this board)
 void
 board_set_status(uint8_t status)
@@ -94,21 +108,27 @@ board_set_status(uint8_t status)
     case STATUS_CONNECTING:
         break;
     case STATUS_READY:
-        // Turn off LED
-        PORTC &= ~LED_MASK;
+	board_set_blinkspeed(0);
         break;
     case STATUS_ACTIVE:
-        // Turn on LED. The update routine will toggle it.
-        PORTC |= LED_MASK;
+	board_set_blinkspeed(4);
         break;
     case STATUS_ERROR:
-        // Set red on error
-        PORTC |= LED_MASK;
+	board_set_blinkspeed(2);
         break;
     default:
         DEBUGF(DBG_ERROR, "badstsval %d\n", status);
     }
 }
+
+void 
+board_set_blinkcode(uint8_t code) {
+    if (code == 0) {
+	code = 1;
+    }
+    blinkcode = code;
+}
+
 
 /*
  * Callback for when the timer fires.
@@ -117,8 +137,27 @@ board_set_status(uint8_t status)
 void
 board_update_display()
 {
-    if (statusValue == STATUS_ACTIVE || statusValue == STATUS_ERROR)
-        PORTC ^= LED_MASK;
+    // make it blink less fast, so can actually count it...
+    if(blinktic) {
+	blinktic --;
+	return;
+    }
+    if (!blinkspeed) {
+	// speed 0 is off
+    	PORTC &= ~LED_MASK;
+	return;
+    }
+    blinktic = blinkspeed;
+
+    if (blinkcnt == 0) {
+	blinkcnt = blinkcode * 2;
+	// return without LED change to indicate next count cycle
+	return;
+    }
+    blinkcnt --;
+
+    // invert LED
+    PORTC ^= LED_MASK;
 }
 
 /* 

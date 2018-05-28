@@ -63,9 +63,14 @@ main(void)
      * handled separately via IRQs.
      */
     for (;;) {
+	board_set_blinkcode(1);
+
         wdt_reset();
 
+	board_set_blinkcode(2);
+
         while (device_running) {
+
             // Check for and process any commands coming in on the bulk pipe.
             USB_BulkWorker();
 
@@ -76,6 +81,8 @@ main(void)
             if (!TimerWorker())
                 doDeviceReset = false;
         }
+
+	board_set_blinkcode(5);
 
         // TODO: save power here when device is not running
 
@@ -175,15 +182,20 @@ USB_BulkWorker()
     uint8_t cmdBuf[XUM_CMDBUF_SIZE], statusBuf[XUM_STATUSBUF_SIZE];
     int8_t status;
 
+    board_set_blinkcode(3);
+
     /*
      * If we are not connected to the host or a command has not yet
      * been sent, no more processing is required.
      */
     if (USB_DeviceState != DEVICE_STATE_Configured)
         return false;
+
     Endpoint_SelectEndpoint(XUM_BULK_OUT_ENDPOINT);
     if (!Endpoint_IsReadWriteAllowed())
         return false;
+
+    board_set_blinkcode(4);
 
 #ifdef DEBUG
     // Dump the status of both endpoints before getting the command
@@ -206,6 +218,8 @@ USB_BulkWorker()
         board_set_status(STATUS_ERROR);
         return false;
     }
+
+    board_set_blinkcode(5);
 
     // Allow commands to leave the extended status untouched
     memset(statusBuf, 0, sizeof(statusBuf));
@@ -230,6 +244,8 @@ USB_BulkWorker()
         Endpoint_StallTransaction();
         return false;
     }
+
+    board_set_blinkcode(6);
 
     return true;
 }

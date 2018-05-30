@@ -236,8 +236,10 @@ static bool IeeeDetect(void)
     IeeeDav(0);
     IeeeEoi(0);
     //IeeeRen(0);
-    IeeeSetPullup(0, IEEE_DAV_I, IEEE_DAV_O);
-    IeeeSetPullup(0, IEEE_EOI_I, IEEE_EOI_O);
+    IeeeSetPullup(1, IEEE_DAV_I, IEEE_DAV_O);
+    IeeeSetPullup(1, IEEE_EOI_I, IEEE_EOI_O);
+    IeeeSetPullup(1, IEEE_NDAC_I, IEEE_NDAC_O);
+    IeeeSetPullup(1, IEEE_NRFD_I, IEEE_NRFD_O);
     //IeeeSetPullup(0, IEEE_REN_I, IEEE_REN_O);
     DELAY_US(100);
     //flg = (IEEE_REN && IEEE_DAV && IEEE_EOI);

@@ -57,6 +57,7 @@
 // set output pin if separate IO
 #define IeeeSetPort(state,port)    {IeeeSetReg(state,IeeePort(port),IeeeGetBit(port))}
 
+#if 0
 // set output pin if single IO
 #define IeeeSetSame(state,port)    {if(state){IeeeSetDdr(0,port);IeeeSetPort(1,port);}else{IeeeSetPort(0,port);IeeeSetDdr(1,port);}}
 
@@ -72,6 +73,23 @@
 
 // set IEEE output line
 #define IeeeSet(state,in,out)         {if(IeeeIsSame(in,out)) {IeeeSetSame(state,in);} else {IeeeSetPort(!state,out);} }
+#endif
+
+// set output pin if single IO
+#define IeeeSetSignal(state,port)  {if(state){IeeeSetDdr(0,port);IeeeSetPort(1,port);}else{IeeeSetPort(0,port);IeeeSetDdr(1,port);}}
+// set output pin if IN and OUT are different (assumes Ddr is set to output anyway)
+#define IeeeSetOut(state,port)     {IeeeSetPort(state,port);}
+
+// set direction register and pullup
+#define IeeeInitIO(in,out)         {if(IeeeIsSame(in,out)) {IeeeSetSignal(1,in);} else \
+					{IeeeSetDdr(1,out);IeeeSetDdr(0,in);IeeeSetPort(1,in);}}
+
+// set/reset pullup
+#define IeeeSetPullupSame(state,port) {IeeeSetDdr(0,port);IeeeSetPort(state,port);}
+#define IeeeSetPullup(state,in,out)   {if(IeeeIsSame(in,out)) {IeeeSetPullupSame(state,in);} else {IeeeSetPort(state,in);}}
+
+// set IEEE output line
+#define IeeeSet(state,in,out)         {if(IeeeIsSame(in,out)) {IeeeSetSignal(state,in);} else {IeeeSetPort(!state,out);} }
 
 // get IEEE input line
 #define IeeeGet(port)                 (IeeePin(port) & (1<<IeeeGetBit(port)))
@@ -226,6 +244,7 @@ static void IeeeInitLines(void)
 //
 static bool IeeeDetect(void)
 {
+#if 0
     bool flg;
 
 #ifdef DEBUG_LED
@@ -238,8 +257,6 @@ static bool IeeeDetect(void)
     //IeeeRen(0);
     IeeeSetPullup(1, IEEE_DAV_I, IEEE_DAV_O);
     IeeeSetPullup(1, IEEE_EOI_I, IEEE_EOI_O);
-    IeeeSetPullup(1, IEEE_NDAC_I, IEEE_NDAC_O);
-    IeeeSetPullup(1, IEEE_NRFD_I, IEEE_NRFD_O);
     //IeeeSetPullup(0, IEEE_REN_I, IEEE_REN_O);
     DELAY_US(100);
     //flg = (IEEE_REN && IEEE_DAV && IEEE_EOI);
@@ -257,8 +274,9 @@ static bool IeeeDetect(void)
         debug_LED_blink(1);
 #endif
     }
-
     return (flg);
+#endif
+    return 1;
 }
 
 // Initialize and claim the bus if an IEEE device is powered on.

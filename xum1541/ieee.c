@@ -92,7 +92,17 @@
 #define IeeeSet(state,in,out)         {if(IeeeIsSame(in,out)) {IeeeSetSignal(state,in);} else {IeeeSetPort(!state,out);} }
 
 // get IEEE input line
-#define IeeeGet(port)                 (IeeePin(port) & (1<<IeeeGetBit(port)))
+#define IeeeGetX(port)                 (IeeePin(port) & (1<<IeeeGetBit(port)))
+
+static inline uint8_t IeeeGet(uint8_t port) {
+	uint8_t rv1 = IeeeGetX(port);
+	uint8_t rv2;
+
+	do {
+		rv2 = rv1;
+	} while ((rv1 = IeeeGetX(port)) != rv2);
+	return rv1;
+}
 
 // IEEE data lines
 #define IeeeDataDdr(port, ddr)  *(IeeeDdr(port)) = ddr 
@@ -587,12 +597,16 @@ static int8_t IeeeByteOut(uint8_t by)
         return 1;            
     }
 
+    IeeeDataOut(~by);                                // OUTPUT!
+
     while(!IEEE_NRFD)                                // WAIT WHILE NRFD
         wdt_reset();                                    // watchdog
 
-    IeeeDataOut(~by);                                // OUTPUT!
     _delay_us(5);
+
     IeeeDav(0);
+
+    _delay_us(200);
 
     ieee_timer = 65;                                // 65ms timeout
 
@@ -600,10 +614,10 @@ static int8_t IeeeByteOut(uint8_t by)
     {
         if(IsTimeout())
         {
-            ieee_status |= IEEE_ST_WRTO;            // 65ms write timeout
+       	    ieee_status |= IEEE_ST_WRTO;            // 65ms write timeout
             rc = 1;
             break;
-        }
+    	}
     }
 
     IeeeDav(1);
@@ -677,10 +691,11 @@ static int8_t IeeeAtnOut(uint8_t by)
             IeeeEoi(0);
             IeeeByteOut(last_byte);
             IeeeEoi(1);
+            _delay_us(ATN_DELAY);
 
             last_byte = -1;
         }
-        else
+        //else
         {
             ieee_timer = 255;                            // 255ms timeout
 
@@ -787,6 +802,8 @@ static int8_t IeeeUnlisten(void)
     int8_t     rc;
 
     rc = IeeeAtnOut(0x3f);
+    // give 2031 a chance to note DAV hi first before ATN goes low
+    _delay_us(ATN_DELAY);
     IeeeAtn(1);                                    // SET ATN HI
     _delay_us(ATN_DELAY);
 
